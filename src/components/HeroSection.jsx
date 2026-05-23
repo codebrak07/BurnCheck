@@ -2,7 +2,7 @@ import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import dashboardPreview from '../assets/dashboard-preview.png';
 
-export default function HeroSection() {
+export default function HeroSection({ onStartAudit }) {
   return (
     <section className="hero-gradient pt-32 pb-16 px-6 md:px-8 text-center max-w-7xl mx-auto flex flex-col items-center">
       {/* Badge */}
@@ -25,7 +25,10 @@ export default function HeroSection() {
 
       {/* CTA Button and Sub-text */}
       <div className="flex flex-col items-center gap-4 mb-16">
-        <button className="bg-accent hover:bg-accent/90 text-black px-8 py-4 rounded-lg text-lg font-bold flex items-center gap-2 transition-all shadow-lg shadow-accent/10 active:scale-95">
+        <button
+          onClick={onStartAudit}
+          className="bg-accent hover:bg-accent/90 text-black px-8 py-4 rounded-lg text-lg font-bold flex items-center gap-2 transition-all shadow-lg shadow-accent/10 active:scale-95 cursor-pointer"
+        >
           Audit My Stack
           <ArrowRight className="w-5 h-5" />
         </button>
