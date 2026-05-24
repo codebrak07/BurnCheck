@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -8,19 +8,219 @@
   --color-primary: #ffffff;
   --color-secondary: #a1a1aa;
   --color-accent: #22c55e;
-  
+
   --font-sans: 'Inter', sans-serif;
 }
 
+/* ── Base ─────────────────────────────────────── */
 @layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
   body {
-    background-color: var(--color-background);
-    color: var(--color-primary);
-    font-family: var(--font-sans);
+    background-color: #0a0a0a;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Hide the OS cursor while custom cursor is active */
+  body.custom-cursor-active,
+  body.custom-cursor-active * {
+    cursor: none !important;
   }
 }
 
+/* ── Keyframes ────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 10px var(--glow-color, #22c55e55); }
+  50%       { box-shadow: 0 0 28px var(--glow-color, #22c55e99), 0 0 60px var(--glow-color, #22c55e33); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+@keyframes cursorPop {
+  0%   { transform: translate(-50%, -50%) scale(1); }
+  50%  { transform: translate(-50%, -50%) scale(1.4); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes borderGlow {
+  0%, 100% { border-color: #27272a; }
+  50%       { border-color: #22c55e66; }
+}
+
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ── Hero radial gradient backdrop ───────────── */
 .hero-gradient {
-  background: radial-gradient(circle at 50% -20%, rgba(34, 197, 94, 0.15) 0%, transparent 70%);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(34,197,94,.18) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 30% at 80% 20%, rgba(34,197,94,.07) 0%, transparent 60%);
+}
+
+/* ── Entrance animation helpers ──────────────── */
+.anim-fade-up {
+  animation: fadeInUp 0.65s cubic-bezier(.22,1,.36,1) both;
+}
+.anim-fade-up-1 { animation-delay: 0.10s; }
+.anim-fade-up-2 { animation-delay: 0.22s; }
+.anim-fade-up-3 { animation-delay: 0.34s; }
+.anim-fade-up-4 { animation-delay: 0.46s; }
+.anim-fade-in  { animation: fadeIn 0.6s ease both; }
+
+.anim-float {
+  animation: floatY 4s ease-in-out infinite;
+}
+
+/* ── Glow card ────────────────────────────────── */
+.glow-card {
+  position: relative;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.glow-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #22c55e22, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.glow-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 40px rgba(34,197,94,.12), 0 2px 12px rgba(0,0,0,.5);
+  border-color: rgba(34,197,94,.35) !important;
+}
+.glow-card:hover::before {
+  opacity: 1;
+}
+
+/* ── Glow button ──────────────────────────────── */
+.btn-glow {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.25s ease, filter 0.2s ease;
+}
+.btn-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,.15) 50%, transparent 60%);
+  background-size: 200% 100%;
+  background-position: -200% center;
+  transition: background-position 0.5s ease;
+}
+.btn-glow:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 0 28px rgba(34,197,94,.45), 0 4px 20px rgba(34,197,94,.2);
+  filter: brightness(1.08);
+}
+.btn-glow:hover::after {
+  background-position: 200% center;
+}
+.btn-glow:active {
+  transform: scale(0.97);
+}
+
+/* ── Glassmorphic panel ───────────────────────── */
+.glass-panel {
+  background: rgba(17,17,17,.75);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,.07);
+}
+
+/* ── Gradient text ────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #ffffff 0%, #22c55e 60%, #4ade80 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 5s ease infinite;
+}
+
+/* ── Badge pill ───────────────────────────────── */
+.badge-pill {
+  background: rgba(34,197,94,.08);
+  border: 1px solid rgba(34,197,94,.25);
+  box-shadow: 0 0 12px rgba(34,197,94,.08) inset;
+}
+
+/* ── Dashboard preview hover ──────────────────── */
+.preview-frame {
+  transition: transform 0.5s cubic-bezier(.22,1,.36,1), box-shadow 0.5s ease;
+}
+.preview-frame:hover {
+  transform: perspective(1000px) rotateX(1deg) translateY(-6px);
+  box-shadow: 0 32px 80px rgba(0,0,0,.7), 0 0 60px rgba(34,197,94,.08);
+}
+
+/* ── Input / select focus glow ────────────────── */
+.input-field {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-field:focus {
+  outline: none;
+  border-color: rgba(34,197,94,.5);
+  box-shadow: 0 0 0 3px rgba(34,197,94,.1);
+}
+
+/* ── Step card number badge ───────────────────── */
+.step-number {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  background: rgba(34,197,94,.12);
+  color: #22c55e;
+  border: 1px solid rgba(34,197,94,.25);
+  flex-shrink: 0;
+}
+
+/* ── Custom cursor ────────────────────────────── */
+.cursor-dot {
+  position: fixed;
+  top: 0; left: 0;
+  pointer-events: none;
+  z-index: 9999;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: transform 0.08s ease, width 0.2s ease, height 0.2s ease, opacity 0.3s ease;
+  will-change: transform, left, top;
+}
+
+.cursor-ring {
+  position: fixed;
+  top: 0; left: 0;
+  pointer-events: none;
+  z-index: 9998;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: left 0.12s ease, top 0.12s ease, width 0.2s ease, height 0.2s ease, opacity 0.3s ease;
+  will-change: transform, left, top;
 }
