@@ -1,66 +1,163 @@
-import React from 'react';
-import { ArrowRight } from 'lucide-react';
-import dashboardPreview from '../assets/dashboard-preview.png';
+import React, { useEffect, useRef, useState } from 'react';
+import { ArrowRight, TrendingDown } from 'lucide-react';
+
+// Mock spend data — directly on-brand
+const TOOLS = [
+  { name: 'OpenAI API',       cost: 847, seats: null, color: 'over', pct: 92 },
+  { name: 'ChatGPT Team',     cost: 300, seats: 12,   color: 'warn', pct: 65 },
+  { name: 'Claude Team',      cost: 240, seats: 8,    color: 'warn', pct: 52 },
+  { name: 'GitHub Copilot',   cost: 228, seats: 12,   color: 'ok',   pct: 49 },
+  { name: 'Cursor Pro',       cost: 160, seats: 8,    color: 'ok',   pct: 35 },
+  { name: 'Windsurf Pro',     cost:  60, seats: 4,    color: 'ok',   pct: 13 },
+];
+
+const TOTAL   = 1835;
+const SAVINGS =  833;
+
+// Animated counter hook
+function useCountUp(target, duration = 1400, start = false) {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (!start) return;
+    const startTime = performance.now();
+    const tick = (now) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(eased * target));
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [target, duration, start]);
+  return value;
+}
 
 export default function HeroSection({ onStartAudit }) {
+  const [active, setActive] = useState(false);
+  const dashRef = useRef(null);
+
+  // Trigger animations when dashboard comes into view
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) setActive(true); },
+      { threshold: 0.3 }
+    );
+    if (dashRef.current) obs.observe(dashRef.current);
+    return () => obs.disconnect();
+  }, []);
+
+  const totalVal   = useCountUp(TOTAL,   1400, active);
+  const savingsVal = useCountUp(SAVINGS, 1600, active);
+
   return (
-    <section className="hero-gradient pt-36 pb-20 px-6 md:px-8 text-center max-w-7xl mx-auto flex flex-col items-center">
+    <section className="hero-gradient relative pt-36 pb-28 px-6 md:px-8 max-w-6xl mx-auto flex flex-col items-center">
 
       {/* Badge */}
-      <div className="badge-pill inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-8 anim-fade-up">
-        <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-        <span className="text-xs font-semibold text-accent tracking-wide">
+      <div className="badge-pill inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-9 anim-fade-up">
+        <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+        <span className="text-xs font-medium tracking-wide" style={{ color: '#6b6b6b' }}>
           Free · No login required · 2 min audit
         </span>
       </div>
 
       {/* Headline */}
       <h1
-        className="gradient-text text-5xl md:text-7xl font-black tracking-tight mb-6 max-w-4xl leading-[1.05] anim-fade-up anim-fade-up-1"
+        className="gradient-text text-5xl md:text-[4.5rem] font-black tracking-tight mb-5 text-center leading-[1.05] anim-fade-up anim-fade-up-1"
+        style={{ letterSpacing: '-0.04em', maxWidth: '18ch' }}
       >
-        See exactly where your AI stack leaks money
+        Know exactly what your AI stack costs
       </h1>
 
-      {/* Subheadline */}
-      <p className="text-lg md:text-xl text-secondary mb-10 max-w-2xl leading-relaxed anim-fade-up anim-fade-up-2">
-        Free audit for startup founders and engineering managers.
-        Enter your tools, get an instant savings breakdown.
+      {/* Sub */}
+      <p className="text-base text-center mb-10 max-w-sm leading-relaxed anim-fade-up anim-fade-up-2" style={{ color: '#bdbdbd' }}>
+        Paste your tools. Get an instant, line-by-line breakdown of where you're overspending.
       </p>
 
-      {/* CTA */}
+      {/* CTA group */}
       <div className="flex flex-col items-center gap-3 mb-20 anim-fade-up anim-fade-up-3">
         <button
           onClick={onStartAudit}
           data-cursor-hover
-          className="btn-glow bg-accent text-black px-10 py-4 rounded-xl text-lg font-black flex items-center gap-2.5"
+          className="btn-primary px-8 py-3.5 text-[15px]"
         >
-          Audit My Stack
-          <ArrowRight className="w-5 h-5" />
+          Start Free Audit
+          <ArrowRight className="w-4 h-4 btn-icon" />
         </button>
-        <p className="text-xs text-secondary">
-          2,000+ audits completed · No credit card needed
+        <p className="text-xs" style={{ color: '#8b949e' }}>
+          2,000+ audits run · No credit card
         </p>
       </div>
 
-      {/* Dashboard preview */}
-      <div className="preview-frame w-full max-w-5xl rounded-2xl border border-border bg-card overflow-hidden shadow-2xl relative group anim-fade-up anim-fade-up-4">
-        {/* Gradient fade at bottom */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent pointer-events-none z-10" />
+      {/* ── Live Spend Dashboard ───────────────────────── */}
+      <div ref={dashRef} className="spend-dashboard w-full max-w-3xl anim-fade-up anim-fade-up-4">
 
-        {/* Top bar chrome */}
-        <div className="flex items-center gap-1.5 px-4 py-3 border-b border-border bg-[#0e0e0e]">
-          <span className="w-3 h-3 rounded-full bg-red-500/70" />
-          <span className="w-3 h-3 rounded-full bg-yellow-500/70" />
-          <span className="w-3 h-3 rounded-full bg-green-500/70" />
-          <span className="ml-4 text-xs text-secondary font-mono opacity-50">burncheck.ai/audit</span>
+        {/* Dashboard header */}
+        <div className="dashboard-header">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-accent" style={{ animation: 'pulseGreen 2s ease-in-out infinite' }} />
+            <span className="text-xs font-mono" style={{ color: '#666', fontFamily: 'JetBrains Mono, monospace' }}>
+              BurnCheck · live audit
+            </span>
+          </div>
+          <span className="text-xs font-mono" style={{ color: '#555', fontFamily: 'JetBrains Mono, monospace' }}>
+            6 tools detected
+          </span>
         </div>
 
-        <img
-          src={dashboardPreview}
-          alt="BurnCheck AI Spend Dashboard"
-          className="w-full aspect-[21/9] object-cover opacity-60 grayscale group-hover:opacity-90 group-hover:grayscale-0 transition-all duration-700"
-        />
+        {/* Total spend row */}
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid #23252a' }}>
+          <div>
+            <p className="text-xs mb-1" style={{ color: '#6b6b6b', fontFamily: 'JetBrains Mono, monospace' }}>monthly ai spend</p>
+            <p className="text-3xl font-black" style={{ fontFamily: 'JetBrains Mono, monospace', color: '#e0e0e0', letterSpacing: '-0.03em' }}>
+              ${totalVal.toLocaleString()}
+              <span className="text-base font-normal ml-1" style={{ color: '#666' }}>/mo</span>
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs mb-1" style={{ color: '#6b6b6b', fontFamily: 'JetBrains Mono, monospace' }}>potential savings</p>
+            <p className="text-2xl font-black accent-text" style={{ fontFamily: 'JetBrains Mono, monospace', letterSpacing: '-0.03em' }}>
+              −${savingsVal.toLocaleString()}
+              <span className="text-sm font-normal ml-1" style={{ color: '#22c55ecc' }}>/mo</span>
+            </p>
+          </div>
+        </div>
+
+        {/* Tool rows */}
+        <div className="px-5 py-3 space-y-3">
+          {TOOLS.map((t, i) => (
+            <div key={t.name} className="flex items-center gap-3" style={{ animationDelay: `${0.5 + i * 0.1}s` }}>
+              <div className="w-36 shrink-0">
+                <p className="text-[11px] truncate" style={{ color: '#b0b0b0', fontFamily: 'JetBrains Mono, monospace' }}>
+                  {t.name}{t.seats ? ` ×${t.seats}` : ''}
+                </p>
+              </div>
+              <div className="flex-1 spend-bar-track">
+                <div
+                  className={`spend-bar-fill ${t.color}`}
+                  style={{ width: active ? `${t.pct}%` : '0%', transitionDelay: `${0.5 + i * 0.1}s` }}
+                />
+              </div>
+              <div className="w-16 text-right shrink-0">
+                <span className="text-[11px] font-mono" style={{ color: '#d0d0d0', fontFamily: 'JetBrains Mono, monospace' }}>
+                  ${t.cost.toLocaleString()}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center gap-2 px-5 py-3.5" style={{ borderTop: '1px solid #23252a', background: '#141516' }}>
+          <TrendingDown className="w-3.5 h-3.5 accent-text shrink-0" />
+          <span className="text-[11px] font-mono" style={{ color: '#22c55e99', fontFamily: 'JetBrains Mono, monospace' }}>
+            Estimated annual savings: <span className="accent-text font-bold">${(SAVINGS * 12).toLocaleString()}</span> if you act on all recommendations
+          </span>
+        </div>
       </div>
+
+      {/* Scroll hint */}
+      <p className="mt-8 text-xs anim-fade-up anim-fade-up-5" style={{ color: '#272727' }}>
+        ↓ see how it works
+      </p>
     </section>
   );
 }

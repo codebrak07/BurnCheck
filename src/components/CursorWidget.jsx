@@ -1,101 +1,106 @@
 import React, { useState } from 'react';
-import { Paintbrush, X, ChevronDown } from 'lucide-react';
+import { Flame, X } from 'lucide-react';
 
-const COLORS = [
-  { id: 'green',  label: 'Emerald', hex: '#22c55e' },
-  { id: 'purple', label: 'Violet',  hex: '#a855f7' },
-  { id: 'cyan',   label: 'Cyan',    hex: '#06b6d4' },
-  { id: 'pink',   label: 'Pink',    hex: '#ec4899' },
+const PRESETS = [
+  { id: 'green',  label: 'Cash Burn',   hex: '#22c55e', sub: 'Default'     },
+  { id: 'orange', label: 'Inferno',     hex: '#f97316', sub: 'Hot spend'   },
+  { id: 'purple', label: 'Crypto Fire', hex: '#a855f7', sub: 'Web3 vibes'  },
+  { id: 'red',    label: 'Danger Zone', hex: '#ef4444', sub: 'Burning cash' },
 ];
 
 const STYLES = [
-  { id: 'dual',    label: 'Dual Glow',   desc: 'Dot + ring trail' },
-  { id: 'glow',    label: 'Core Glow',   desc: 'Blurred blob' },
-  { id: 'minimal', label: 'Minimalist',  desc: 'Dot only' },
-  { id: 'default', label: 'Default',     desc: 'System cursor' },
+  { id: 'flame', label: '🔥 Flame + Sparks', desc: 'Full effect'   },
+  { id: 'none',  label: '⬜ Off',            desc: 'System cursor' },
 ];
 
 export default function CursorWidget({ cursorColor, setCursorColor, cursorStyle, setCursorStyle }) {
   const [open, setOpen] = useState(false);
+  const active = PRESETS.find(p => p.id === cursorColor) || PRESETS[0];
 
   return (
-    <div
-      className="fixed bottom-6 right-6 z-[9990] flex flex-col items-end gap-3"
-      style={{ userSelect: 'none' }}
-    >
-      {/* Panel */}
+    <div className="fixed bottom-6 right-6 z-[9990] flex flex-col items-end gap-3" style={{ userSelect: 'none' }}>
+
       {open && (
         <div
           className="glass-panel rounded-2xl p-5 w-64 shadow-2xl anim-fade-in"
-          style={{ boxShadow: '0 24px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.06)' }}
+          style={{ boxShadow: '0 24px 60px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.06)' }}
         >
           {/* Header */}
           <div className="flex justify-between items-center mb-4">
-            <span className="text-sm font-bold text-primary tracking-wide">Cursor Style</span>
+            <div className="flex items-center gap-2">
+              <Flame className="w-4 h-4 text-accent" />
+              <span className="text-sm font-bold text-primary">Cursor Flame</span>
+            </div>
             <button
               onClick={() => setOpen(false)}
               data-cursor-hover
-              className="text-secondary hover:text-primary transition-colors p-0.5 rounded"
+              className="text-secondary hover:text-primary transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Color picker */}
-          <p className="text-xs text-secondary uppercase tracking-widest mb-2 font-semibold">Color</p>
-          <div className="flex gap-2 mb-4">
-            {COLORS.map(c => (
+          {/* Color / preset */}
+          <p className="text-xs text-secondary uppercase tracking-widest mb-2.5 font-semibold">Burn Color</p>
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            {PRESETS.map(p => (
               <button
-                key={c.id}
+                key={p.id}
                 data-cursor-hover
-                onClick={() => setCursorColor(c.id)}
-                title={c.label}
-                className="relative w-8 h-8 rounded-full transition-transform duration-200 hover:scale-110 active:scale-95"
+                onClick={() => setCursorColor(p.id)}
+                className={`relative flex flex-col items-start px-3 py-2.5 rounded-xl border transition-all duration-200 text-left ${
+                  cursorColor === p.id
+                    ? 'border-opacity-60 bg-white/5'
+                    : 'border-border hover:border-white/15 hover:bg-white/3'
+                }`}
                 style={{
-                  background: c.hex,
-                  boxShadow: cursorColor === c.id
-                    ? `0 0 0 2px #0a0a0a, 0 0 0 4px ${c.hex}, 0 0 14px ${c.hex}88`
-                    : '0 0 0 2px #27272a',
+                  borderColor: cursorColor === p.id ? p.hex + '99' : undefined,
+                  boxShadow:   cursorColor === p.id ? `0 0 12px ${p.hex}33` : undefined,
                 }}
-              />
+              >
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: p.hex, boxShadow: `0 0 6px ${p.hex}` }} />
+                  <span className="text-xs font-bold text-primary">{p.label}</span>
+                </div>
+                <span className="text-[10px] text-secondary">{p.sub}</span>
+              </button>
             ))}
           </div>
 
-          {/* Style picker */}
-          <p className="text-xs text-secondary uppercase tracking-widest mb-2 font-semibold">Type</p>
-          <div className="flex flex-col gap-1.5">
+          {/* On/Off */}
+          <p className="text-xs text-secondary uppercase tracking-widest mb-2 font-semibold">Mode</p>
+          <div className="flex gap-2">
             {STYLES.map(s => (
               <button
                 key={s.id}
                 data-cursor-hover
                 onClick={() => setCursorStyle(s.id)}
-                className={`flex items-center justify-between px-3 py-2 rounded-lg text-left text-sm transition-all duration-200 ${
+                className={`flex-1 text-xs py-2 px-2 rounded-lg border transition-all duration-200 font-medium ${
                   cursorStyle === s.id
-                    ? 'bg-accent/15 text-accent border border-accent/30'
-                    : 'text-secondary hover:text-primary hover:bg-white/5 border border-transparent'
+                    ? 'border-accent/40 bg-accent/10 text-accent'
+                    : 'border-border text-secondary hover:text-primary hover:bg-white/5'
                 }`}
               >
-                <span className="font-medium">{s.label}</span>
-                <span className="text-xs opacity-60">{s.desc}</span>
+                {s.label}
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* Toggle button */}
+      {/* Toggle FAB */}
       <button
         onClick={() => setOpen(o => !o)}
         data-cursor-hover
         className="btn-glow w-12 h-12 rounded-full glass-panel flex items-center justify-center shadow-xl"
         style={{
           boxShadow: open
-            ? '0 0 0 2px #22c55e66, 0 8px 32px rgba(0,0,0,.5)'
+            ? `0 0 0 2px ${active.hex}66, 0 8px 32px rgba(0,0,0,.5)`
             : '0 0 0 1px rgba(255,255,255,.08), 0 8px 32px rgba(0,0,0,.5)',
         }}
-        title="Customize cursor"
+        title="Customize cursor flame"
       >
-        <Paintbrush className="w-5 h-5 text-accent" />
+        <Flame className="w-5 h-5" style={{ color: active.hex }} />
       </button>
     </div>
   );

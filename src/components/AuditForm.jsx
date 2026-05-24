@@ -13,7 +13,6 @@ const toolPlans = {
 };
 
 const useCases = ['Coding', 'Writing', 'Data Analysis', 'Research', 'Mixed'];
-
 const defaultTool = () => ({ toolName: 'Cursor', plan: 'Pro', spend: 20, seats: 1 });
 
 function load(key, fallback) {
@@ -44,189 +43,132 @@ export default function AuditForm({ onBack }) {
 
   const addTool    = () => setTools(prev => [...prev, defaultTool()]);
   const removeTool = i  => setTools(prev => prev.filter((_, idx) => idx !== i));
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    alert('Audit submitted! Results view coming soon.');
-  };
-
-  const inputClass = "input-field w-full bg-[#0e0e0e] border border-border rounded-lg px-4 py-3 text-primary text-sm focus:outline-none transition-all";
-  const labelClass = "block text-xs font-semibold text-secondary mb-1.5 uppercase tracking-wider";
+  const handleSubmit = (e) => { e.preventDefault(); alert('Audit submitted! Results coming soon.'); };
 
   return (
     <section className="min-h-screen pt-28 pb-24 px-6 md:px-8 max-w-4xl mx-auto anim-fade-in">
 
-      {/* Back */}
+      {/* Back button — uses btn-back class */}
       <button
         onClick={onBack}
         data-cursor-hover
-        className="flex items-center gap-1.5 text-sm text-secondary hover:text-primary mb-10 transition-colors duration-200 group"
+        className="btn-back text-sm mb-10"
+        style={{ color: 'var(--color-secondary)' }}
       >
-        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-200" />
+        <ArrowLeft className="w-4 h-4 btn-icon" />
         Back to Home
       </button>
 
       {/* Header */}
       <div className="mb-10">
-        <h2 className="text-3xl md:text-4xl font-black text-primary mb-3 tracking-tight">
-          Configure Your{' '}
-          <span className="gradient-text">Stack Audit</span>
+        <h2 className="text-3xl md:text-4xl font-black text-primary mb-3" style={{ letterSpacing: '-0.03em' }}>
+          Configure Your Stack Audit
         </h2>
-        <p className="text-secondary text-sm leading-relaxed max-w-xl">
-          Fill in your team details and the AI tools you're actively paying for. We'll compute your optimized spend instantly.
+        <p className="text-sm leading-relaxed max-w-xl" style={{ color: 'var(--color-secondary)' }}>
+          Fill in your team details and the AI tools you're actively paying for.
         </p>
       </div>
 
       {/* Live spend ticker */}
-      <div
-        className="glow-card glass-panel rounded-2xl px-6 py-4 mb-8 flex items-center justify-between border border-border"
-      >
+      <div className="rounded-xl px-6 py-4 mb-8 flex items-center justify-between"
+        style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
         <div>
-          <p className="text-xs text-secondary uppercase tracking-widest font-semibold mb-0.5">Declared Monthly Spend</p>
-          <p className="text-3xl font-black text-primary">
+          <p className="text-[10px] uppercase tracking-[0.2em] mb-1 font-semibold" style={{ color: 'var(--color-subtle)', fontFamily: 'JetBrains Mono, monospace' }}>declared monthly spend</p>
+          <p className="text-2xl font-black" style={{ fontFamily: 'JetBrains Mono, monospace', color: '#e0e0e0', letterSpacing: '-0.03em' }}>
             ${totalSpend.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
-        <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'rgba(34,197,94,.12)', border: '1px solid rgba(34,197,94,.25)' }}>
-          <DollarSign className="w-6 h-6 text-accent" />
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center"
+          style={{ background: 'rgba(0,217,146,.06)', border: '1px solid rgba(0,217,146,.15)' }}>
+          <DollarSign className="w-5 h-5 accent-text" />
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-5">
         {/* Team meta */}
-        <div className="bg-card border border-border rounded-2xl p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6 rounded-lg" style={{ background: 'var(--color-background)', border: '1px solid var(--color-border)' }}>
           <div>
-            <label htmlFor="team-size" className={labelClass}>Team Size</label>
-            <input
-              id="team-size"
-              type="number" min="1"
+            <label htmlFor="team-size" className="block text-xs font-semibold mb-2 uppercase tracking-widest" style={{ color: 'var(--color-subtle)' }}>Team Size</label>
+            <input id="team-size" type="number" min="1"
               value={teamSize}
               onChange={e => setTeamSize(Math.max(1, parseInt(e.target.value) || 1))}
-              data-cursor-hover
-              className={inputClass}
-            />
+              data-cursor-hover className="input-field" />
           </div>
           <div>
-            <label htmlFor="use-case" className={labelClass}>Primary Use Case</label>
-            <select
-              id="use-case"
-              value={useCase}
-              onChange={e => setUseCase(e.target.value)}
-              data-cursor-hover
-              className={inputClass + ' appearance-none'}
-            >
+            <label htmlFor="use-case" className="block text-xs font-semibold mb-2 uppercase tracking-widest" style={{ color: 'var(--color-subtle)' }}>Primary Use Case</label>
+            <select id="use-case" value={useCase} onChange={e => setUseCase(e.target.value)}
+              data-cursor-hover className="input-field appearance-none">
               {useCases.map(u => <option key={u} value={u}>{u}</option>)}
             </select>
           </div>
         </div>
 
-        {/* Tools */}
+        {/* Tools section */}
         <div>
           <div className="flex justify-between items-center mb-3">
-            <h3 className="text-base font-bold text-primary">AI Tool Allocations</h3>
-            <span className="text-xs text-secondary font-mono bg-card border border-border px-2 py-1 rounded-md">
+            <h3 className="text-sm font-bold" style={{ color: '#d0d0d0' }}>AI Tool Allocations</h3>
+            <span className="text-xs font-mono px-2 py-1 rounded"
+              style={{ color: 'var(--color-subtle)', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', fontFamily: 'JetBrains Mono, monospace' }}>
               {tools.length} tool{tools.length !== 1 ? 's' : ''}
             </span>
           </div>
 
           <div className="space-y-3">
             {tools.map((item, idx) => (
-              <div
-                key={idx}
-                className="glow-card bg-card border border-border p-5 rounded-2xl flex flex-col md:flex-row md:items-end gap-4"
-              >
-                {/* Tool */}
+              <div key={idx} className="flex flex-col md:flex-row md:items-end gap-3 p-5 rounded-lg"
+                style={{ background: 'var(--color-background)', border: '1px solid var(--color-border)' }}>
                 <div className="flex-1">
-                  <label className={labelClass}>Tool</label>
-                  <select
-                    value={item.toolName}
-                    onChange={e => handleToolChange(idx, 'toolName', e.target.value)}
-                    data-cursor-hover
-                    className={inputClass + ' appearance-none'}
-                  >
-                    {Object.keys(toolPlans).map(name => (
-                      <option key={name} value={name}>{name}</option>
-                    ))}
+                  <label className="block text-[10px] font-semibold mb-2 uppercase tracking-widest" style={{ color: 'var(--color-subtle)' }}>Tool</label>
+                  <select value={item.toolName} onChange={e => handleToolChange(idx, 'toolName', e.target.value)}
+                    data-cursor-hover className="input-field appearance-none">
+                    {Object.keys(toolPlans).map(n => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </div>
-
-                {/* Plan */}
                 <div className="flex-1">
-                  <label className={labelClass}>Plan</label>
-                  <select
-                    value={item.plan}
-                    onChange={e => handleToolChange(idx, 'plan', e.target.value)}
-                    data-cursor-hover
-                    className={inputClass + ' appearance-none'}
-                  >
-                    {toolPlans[item.toolName].map(p => (
-                      <option key={p} value={p}>{p}</option>
-                    ))}
+                  <label className="block text-[10px] font-semibold mb-2 uppercase tracking-widest" style={{ color: 'var(--color-subtle)' }}>Plan</label>
+                  <select value={item.plan} onChange={e => handleToolChange(idx, 'plan', e.target.value)}
+                    data-cursor-hover className="input-field appearance-none">
+                    {toolPlans[item.toolName].map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
-
-                {/* Spend */}
                 <div className="flex-1">
-                  <label className={labelClass}>Monthly Spend (USD)</label>
+                  <label className="block text-[10px] font-semibold mb-2 uppercase tracking-widest" style={{ color: 'var(--color-subtle)' }}>Monthly Spend (USD)</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-sm">$</span>
-                    <input
-                      type="number" min="0" step="0.01"
-                      value={item.spend}
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: 'var(--color-subtle)' }}>$</span>
+                    <input type="number" min="0" step="0.01" value={item.spend}
                       onChange={e => handleToolChange(idx, 'spend', Math.max(0, parseFloat(e.target.value) || 0))}
-                      data-cursor-hover
-                      className={inputClass + ' pl-7'}
-                    />
+                      data-cursor-hover className="input-field" style={{ paddingLeft: '24px' }} />
                   </div>
                 </div>
-
-                {/* Seats */}
-                <div className="w-28">
-                  <label className={labelClass}>Seats</label>
-                  <input
-                    type="number" min="1"
-                    value={item.seats}
+                <div className="w-24">
+                  <label className="block text-[10px] font-semibold mb-2 uppercase tracking-widest" style={{ color: 'var(--color-subtle)' }}>Seats</label>
+                  <input type="number" min="1" value={item.seats}
                     onChange={e => handleToolChange(idx, 'seats', Math.max(1, parseInt(e.target.value) || 1))}
-                    data-cursor-hover
-                    className={inputClass}
-                  />
+                    data-cursor-hover className="input-field" />
                 </div>
-
-                {/* Remove */}
-                <button
-                  type="button"
-                  onClick={() => removeTool(idx)}
-                  disabled={tools.length === 1}
-                  data-cursor-hover
-                  className="self-end p-2.5 rounded-xl border border-border text-secondary hover:text-red-400 hover:border-red-500/30 disabled:opacity-25 disabled:hover:text-secondary disabled:hover:border-border transition-all duration-200 bg-background shrink-0"
-                >
+                {/* Remove — uses btn-danger class */}
+                <button type="button" onClick={() => removeTool(idx)}
+                  disabled={tools.length === 1} data-cursor-hover
+                  className="btn-danger self-end p-2.5 shrink-0">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             ))}
           </div>
 
-          {/* Add row */}
-          <button
-            type="button"
-            onClick={addTool}
-            data-cursor-hover
-            className="mt-3 w-full border border-dashed border-border hover:border-accent/40 bg-transparent hover:bg-accent/5 text-secondary hover:text-accent py-4 rounded-2xl flex items-center justify-center gap-2 transition-all duration-300 text-sm font-medium"
-          >
-            <Plus className="w-4 h-4" />
+          {/* Add row — uses btn-add class */}
+          <button type="button" onClick={addTool} data-cursor-hover
+            className="btn-add mt-3 w-full py-4 text-sm font-medium">
+            <Plus className="w-4 h-4 btn-icon" />
             Add Another Tool
           </button>
         </div>
 
         {/* Submit */}
-        <div className="pt-4 border-t border-border flex justify-end">
-          <button
-            type="submit"
-            data-cursor-hover
-            className="btn-glow bg-accent text-black px-8 py-4 rounded-xl font-black flex items-center gap-2 text-base"
-          >
+        <div className="pt-4 flex justify-end" style={{ borderTop: '1px dashed rgba(79, 93, 117, 0.4)' }}>
+          <button type="submit" data-cursor-hover className="btn-primary px-8 py-3.5 text-[15px]">
             Run My Audit
-            <ArrowRight className="w-5 h-5" />
+            <ArrowRight className="w-4 h-4 btn-icon" />
           </button>
         </div>
       </form>
