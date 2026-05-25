@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import ToolsGrid from './components/ToolsGrid';
@@ -135,17 +136,153 @@ function runAuditBenchmark({ teamSize, useCase, tools }) {
   };
 }
 
-function App() {
-  const [view, setView] = useState('landing');
+function LandingPage() {
+  const navigate = useNavigate();
+  return (
+    <>
+      <HeroSection onStartAudit={() => { navigate('/audit'); window.scrollTo({ top: 0 }); }} />
+      <ToolsGrid />
+      <SpendBenchmarks />
+      <StepsRow />
+      <AuditPreview />
+      <CTASection onStartAudit={() => { navigate('/audit'); window.scrollTo({ top: 0 }); }} />
+      <SocialProof />
+    </>
+  );
+}
+
+function FormPage({ onAuditSubmit }) {
+  const navigate = useNavigate();
+  return (
+    <AuditForm onBack={() => { navigate('/'); window.scrollTo({ top: 0 }); }} onSubmit={onAuditSubmit} />
+  );
+}
+
+// Encode audit inputs into a URL-safe Base64 string
+function encodeAuditId(formData) {
+  try {
+    const compact = {
+      t: formData.teamSize,
+      u: formData.useCase,
+      s: formData.tools.map(t => [t.toolName, t.plan, t.spend, t.seats])
+    };
+    const jsonStr = JSON.stringify(compact);
+    const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+    return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  } catch (e) {
+    console.error("Failed to encode audit ID:", e);
+    // Fallback to random ID if encoding fails
+    return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  }
+}
+
+// Decode URL-safe Base64 string back into audit inputs
+function decodeAuditId(id) {
+  try {
+    let b64 = id.replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4) b64 += '=';
+    const jsonStr = decodeURIComponent(escape(atob(b64)));
+    const compact = JSON.parse(jsonStr);
+    
+    // Check if the format is correct
+    if (typeof compact.t !== 'number' || !Array.isArray(compact.s)) {
+      return null;
+    }
+    
+    return {
+      teamSize: compact.t,
+      useCase: compact.u || 'Mixed',
+      tools: compact.s.map(t => ({
+        toolName: t[0],
+        plan: t[1],
+        spend: parseFloat(t[2]) || 0,
+        seats: parseInt(t[3]) || 1
+      }))
+    };
+  } catch (e) {
+    // Return null silently for invalid Base64 string (like legacy IDs)
+    return null;
+  }
+}
+
+function ResultsPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [auditData, setAuditData] = useState(null);
+  const [error, setError] = useState(false);
 
-  const goForm = () => { setView('form'); window.scrollTo({ top: 0 }); };
-  const goHome = () => { setView('landing'); window.scrollTo({ top: 0 }); };
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(`audit_${id}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        
+        // Strip email and company name details for the public shared URL version
+        const stripped = {
+          ...parsed,
+          email: undefined,
+          company: undefined,
+          role: undefined
+        };
+        setAuditData(stripped);
+        setError(false);
+      } else {
+        // Fallback: try decoding the ID as a Base64-encoded audit input
+        const decoded = decodeAuditId(id);
+        if (decoded) {
+          const results = runAuditBenchmark(decoded);
+          setAuditData(results);
+          setError(false);
+        } else {
+          setError(true);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load audit:", e);
+      setError(true);
+    }
+  }, [id]);
 
-  const handleFormSubmit = (formData) => {
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-center p-6 anim-fade-in">
+        <h2 className="text-2xl font-black mb-4">Audit Report Not Found</h2>
+        <p className="text-sm mb-6 max-w-sm" style={{ color: 'var(--color-secondary)' }}>
+          We couldn't locate the requested AI spend audit report. It might have expired or been deleted.
+        </p>
+        <button
+          onClick={() => { navigate('/'); window.scrollTo({ top: 0 }); }}
+          className="btn-primary px-6 py-3 text-sm"
+          data-cursor-hover
+        >
+          Go to Landing Page
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <AuditResults
+      auditData={auditData}
+      onBack={() => { navigate('/audit'); window.scrollTo({ top: 0 }); }}
+    />
+  );
+}
+
+function AppContent() {
+  const navigate = useNavigate();
+
+  const handleAuditSubmit = (formData) => {
     const results = runAuditBenchmark(formData);
-    setAuditData(results);
-    setView('results');
+    
+    // Generate a unique ID (Base64 encoded audit inputs)
+    const id = encodeAuditId(formData);
+    
+    // Store in localStorage
+    localStorage.setItem(`audit_${id}`, JSON.stringify(results));
+    
+    // Navigate to the unique results page
+    navigate(`/audit/${id}`);
     window.scrollTo({ top: 0 });
   };
 
@@ -154,29 +291,25 @@ function App() {
       <CustomCursor />
 
       <div className="relative" style={{ zIndex: 2 }}>
-        <Navbar onNavigate={v => v === 'landing' ? goHome() : goForm()} />
+        <Navbar onNavigate={v => v === 'landing' ? navigate('/') : navigate('/audit')} />
         <main>
-          {view === 'landing' && (
-            <>
-              <HeroSection onStartAudit={goForm} />
-              <ToolsGrid />
-              <SpendBenchmarks />
-              <StepsRow />
-              <AuditPreview />
-              <CTASection onStartAudit={goForm} />
-              <SocialProof />
-            </>
-          )}
-          {view === 'form' && (
-            <AuditForm onBack={goHome} onSubmit={handleFormSubmit} />
-          )}
-          {view === 'results' && (
-            <AuditResults auditData={auditData} onBack={goForm} />
-          )}
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/audit" element={<FormPage onAuditSubmit={handleAuditSubmit} />} />
+            <Route path="/audit/:id" element={<ResultsPage />} />
+          </Routes>
         </main>
         <Footer />
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
   );
 }
 

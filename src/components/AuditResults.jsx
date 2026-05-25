@@ -1,4 +1,5 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { ArrowLeft, Share2, Mail, Sparkles, TrendingDown, ExternalLink, X, Check, ArrowRight } from 'lucide-react';
 
 // Ripple animation component for tactile hover feedback
@@ -142,6 +143,14 @@ function ResultCard({ tool }) {
 
 export default function AuditResults({ auditData, onBack }) {
   const [copied, setCopied] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [email, setEmail] = useState('');
+  const [company, setCompany] = useState('');
+  const [role, setRole] = useState('');
+  const [honeypot, setHoneypot] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
 
   // Fallback to sample data if no auditData is passed
   const data = auditData || {
@@ -176,19 +185,137 @@ export default function AuditResults({ auditData, onBack }) {
     summary: "Your stack is spending $340/month more than necessary. The biggest leak is Cursor Business for a small team, combined with underutilized Claude Team seats. Switching these to developer Pro plans maintains performance while recapturing immediately."
   };
 
+  const { id } = useParams();
+
   const handleShare = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      const shareUrl = id 
+        ? `${window.location.origin}/audit/${id}`
+        : `${window.location.origin}/audit`;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = shareUrl;
+        textarea.style.position = "fixed"; // Keep outside view layout
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy to clipboard:', err);
     }
-  }, []);
+  }, [id]);
 
   const handlePrint = useCallback(() => {
     window.print();
   }, []);
+
+  useEffect(() => {
+    if (!data) return;
+
+    const titleText = `BurnCheck Audit — Save $${data.totalMonthlySavings}/month on AI tools`;
+    document.title = titleText;
+
+    const setMetaTag = (property, content) => {
+      let element = document.querySelector(`meta[property="${property}"]`) || 
+                    document.querySelector(`meta[name="${property}"]`);
+      if (!element) {
+        element = document.createElement('meta');
+        if (property.startsWith('og:')) {
+          element.setAttribute('property', property);
+        } else {
+          element.setAttribute('name', property);
+        }
+        document.head.appendChild(element);
+      }
+      element.setAttribute('content', content);
+    };
+
+    setMetaTag('og:title', titleText);
+    
+    // First two sentences of the AI summary description
+    const sentences = data.summary.split('.').slice(0, 2).join('.') + '.';
+    setMetaTag('og:description', sentences);
+    setMetaTag('og:image', `${window.location.origin}/BurnCheck.png`);
+    
+    setMetaTag('twitter:card', 'summary_large_image');
+    setMetaTag('twitter:title', titleText);
+    setMetaTag('twitter:description', sentences);
+    setMetaTag('twitter:image', `${window.location.origin}/BurnCheck.png`);
+
+    return () => {
+      document.title = "BurnCheck | Free AI Spend Auditor for Startups";
+    };
+  }, [data]);
+
+  const submitLeadCapture = useCallback(async (leadData) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        console.log("Mock lead captured:", leadData);
+        resolve({ success: true });
+      }, 1000);
+    });
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    // Honeypot check
+    if (honeypot.trim() !== '') {
+      // Silently reject: act as if it succeeded but do not call the service
+      setLoading(true);
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setLoading(false);
+      setSuccess(true);
+      handlePrint();
+      setTimeout(() => {
+        setShowModal(false);
+        setSuccess(false);
+        setEmail('');
+        setCompany('');
+        setRole('');
+        setHoneypot('');
+      }, 2000);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await submitLeadCapture({ email, company, role });
+      setLoading(false);
+      setSuccess(true);
+      
+      // Auto-trigger print/download on success
+      handlePrint();
+
+      // Close modal after 2 seconds
+      setTimeout(() => {
+        setShowModal(false);
+        setSuccess(false);
+        setEmail('');
+        setCompany('');
+        setRole('');
+      }, 2000);
+    } catch (err) {
+      setLoading(false);
+      setError('An error occurred. Please try again.');
+    }
+  };
 
   return (
     <section className="min-h-screen pt-28 pb-24 px-6 md:px-8 max-w-4xl mx-auto anim-fade-in relative">
@@ -303,35 +430,9 @@ export default function AuditResults({ auditData, onBack }) {
             <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
             You're spending well!
           </h4>
-          <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--color-secondary)' }}>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--color-secondary)' }}>
             Your AI stack is highly optimized! We didn't find any major savings. Keep this page bookmarked and check back when your team size or AI subscription stack changes.
           </p>
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={handlePrint}
-              data-cursor-hover
-              className="btn-primary px-5 py-2.5 text-xs font-semibold"
-            >
-              Save PDF Report
-            </button>
-            <button
-              onClick={handleShare}
-              data-cursor-hover
-              className="btn-ghost px-5 py-2.5 text-xs flex items-center gap-1.5"
-            >
-              {copied ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-accent" />
-                  Link Copied!
-                </>
-              ) : (
-                <>
-                  <Share2 className="w-3.5 h-3.5" />
-                  Share Audit
-                </>
-              )}
-            </button>
-          </div>
         </div>
       )}
 
@@ -356,33 +457,177 @@ export default function AuditResults({ auditData, onBack }) {
 
       {/* Action Row */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6" style={{ borderTop: '1px dashed rgba(79, 93, 117, 0.4)' }}>
-        <button
-          onClick={handleShare}
-          data-cursor-hover
-          className="btn-ghost w-full sm:w-auto px-6 py-3 text-sm flex justify-center items-center gap-2"
-        >
-          {copied ? (
-            <>
-              <Check className="w-4 h-4 text-accent" />
-              Link Copied!
-            </>
-          ) : (
-            <>
-              <Share2 className="w-4 h-4" />
-              Share Audit
-            </>
-          )}
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <button
+            onClick={handleShare}
+            data-cursor-hover
+            className="btn-ghost w-full sm:w-auto px-5 py-3 text-sm flex justify-center items-center gap-2"
+          >
+            {copied ? (
+              <>
+                <Check className="w-4 h-4 text-accent" />
+                Link Copied!
+              </>
+            ) : (
+              <>
+                <Share2 className="w-4 h-4" />
+                Share Audit
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={handlePrint}
+            data-cursor-hover
+            className="btn-ghost w-full sm:w-auto px-5 py-3 text-sm flex justify-center items-center gap-2"
+          >
+            Download PDF
+          </button>
+        </div>
 
         <button
-          onClick={handlePrint}
+          onClick={() => setShowModal(true)}
           data-cursor-hover
           className="btn-primary w-full sm:w-auto px-6 py-3.5 text-sm flex justify-center items-center gap-2"
         >
-          Save PDF Report
+          Get full report
           <ArrowRight className="w-4 h-4 btn-icon" />
         </button>
       </div>
+
+      {/* Email Capture Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/80 backdrop-blur-md anim-fade-in"
+            onClick={() => { if (!loading && !success) setShowModal(false); }}
+          />
+
+          {/* Modal Container */}
+          <div
+            className="relative w-full max-w-md p-6 rounded-xl border z-10 anim-fade-in"
+            style={{
+              background: 'var(--color-background)',
+              borderColor: 'var(--color-border)',
+              boxShadow: '0 32px 64px rgba(0, 0, 0, 0.8)'
+            }}
+          >
+            {/* Close Button */}
+            {!loading && !success && (
+              <button
+                onClick={() => setShowModal(false)}
+                data-cursor-hover
+                className="absolute top-4 right-4 text-subtle hover:text-white p-1 rounded-md"
+                style={{ transition: 'color 0.2s ease' }}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+
+            {success ? (
+              <div className="py-6 text-center space-y-4">
+                <div className="w-12 h-12 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto">
+                  <Check className="w-6 h-6 accent-text" />
+                </div>
+                <h4 className="text-xl font-bold text-primary">Report Sent!</h4>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--color-secondary)' }}>
+                  Report sent! Check your inbox.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Mail className="w-5 h-5 accent-text animate-pulse" />
+                  <h4 className="text-lg font-bold text-primary">Get your full audit report</h4>
+                </div>
+                <p className="text-sm leading-relaxed font-medium" style={{ color: 'var(--color-secondary)' }}>
+                  We'll email you the breakdown + savings plan.
+                </p>
+
+                {error && (
+                  <p className="text-xs font-semibold text-red-500 font-mono" style={{ color: '#ef4444' }}>
+                    {error}
+                  </p>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+                  {/* Honeypot field */}
+                  <div style={{ display: 'none' }} aria-hidden="true">
+                    <input
+                      type="text"
+                      name="website"
+                      value={honeypot}
+                      onChange={e => setHoneypot(e.target.value)}
+                      tabIndex="-1"
+                      autoComplete="off"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-semibold mb-2 uppercase tracking-widest" style={{ color: 'var(--color-subtle)' }}>
+                      Work Email <span className="text-red-500" style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="developer@company.com"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      className="input-field"
+                      disabled={loading}
+                      data-cursor-hover
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-semibold mb-2 uppercase tracking-widest" style={{ color: 'var(--color-subtle)' }}>
+                      Company Name (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Acme Inc."
+                      value={company}
+                      onChange={e => setCompany(e.target.value)}
+                      className="input-field"
+                      disabled={loading}
+                      data-cursor-hover
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-semibold mb-2 uppercase tracking-widest" style={{ color: 'var(--color-subtle)' }}>
+                      Your Role (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Engineering Lead"
+                      value={role}
+                      onChange={e => setRole(e.target.value)}
+                      className="input-field"
+                      disabled={loading}
+                      data-cursor-hover
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    data-cursor-hover
+                    className="btn-primary w-full py-3.5 text-sm flex justify-center items-center gap-2"
+                  >
+                    {loading ? 'Sending...' : 'Send my report →'}
+                  </button>
+                </form>
+
+                <p className="text-[10px] leading-relaxed text-center" style={{ color: 'var(--color-subtle)' }}>
+                  No spam. Credex may reach out if your savings opportunity is significant.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
