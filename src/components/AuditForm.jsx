@@ -20,7 +20,7 @@ function load(key, fallback) {
   catch { return fallback; }
 }
 
-export default function AuditForm({ onBack }) {
+export default function AuditForm({ onBack, onSubmit }) {
   const [teamSize, setTeamSize] = useState(() => load('bc_teamSize', 1));
   const [useCase,  setUseCase]  = useState(() => load('bc_useCase',  'Coding'));
   const [tools,    setTools]    = useState(() => load('bc_tools',    [defaultTool()]));
@@ -43,7 +43,12 @@ export default function AuditForm({ onBack }) {
 
   const addTool    = () => setTools(prev => [...prev, defaultTool()]);
   const removeTool = i  => setTools(prev => prev.filter((_, idx) => idx !== i));
-  const handleSubmit = (e) => { e.preventDefault(); alert('Audit submitted! Results coming soon.'); };
+  const handleSubmit = (e) => { 
+    e.preventDefault(); 
+    if (onSubmit) {
+      onSubmit({ teamSize, useCase, tools });
+    }
+  };
 
   return (
     <section className="min-h-screen pt-28 pb-24 px-6 md:px-8 max-w-4xl mx-auto anim-fade-in">

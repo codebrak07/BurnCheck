@@ -11,7 +11,7 @@ export default function Navbar({ onNavigate }) {
           style={{ letterSpacing: '-0.04em' }}
         >
           <img src="/BurnCheck.png" alt="BurnCheck Logo" className="h-6 w-6 rounded-full object-contain" />
-          <span>BurnCheck</span>
+          <span className="logo-text-gradient">BurnCheck</span>
         </button>
 
         <button
