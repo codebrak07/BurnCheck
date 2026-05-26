@@ -92,9 +92,9 @@ function BenchmarkCard({ title, icon: Icon, items }) {
 
 export default function SpendBenchmarks() {
   const tokenSpecs = [
-    { label: "GPT-4o API", value: "$5.00 / $15.00", desc: "Cost per million input / output tokens. High history sizes multiply spend." },
+    { label: "GPT-4o API", value: "$2.50 / $10.00", desc: "Cost per million input / output tokens. High history sizes multiply spend." },
     { label: "Claude 3.5 Sonnet", value: "$3.00 / $15.00", desc: "Standard developer agent engine. Heavy token generation costs." },
-    { label: "Gemini 1.5 Pro", value: "$7.00 / $21.00", desc: "Huge 2M token context limit window. Massive cost multiplier if unmanaged." }
+    { label: "Gemini 1.5 Pro", value: "$1.25 / $5.00", desc: "Huge 2M token context limit window. Massive cost multiplier if context expands." }
   ];
 
   const licensingSpecs = [

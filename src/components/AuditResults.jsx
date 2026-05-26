@@ -151,6 +151,8 @@ export default function AuditResults({ auditData, onBack }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [aiSummary, setAiSummary] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
 
   // Fallback to sample data if no auditData is passed
   const data = auditData || {
@@ -217,6 +219,73 @@ export default function AuditResults({ auditData, onBack }) {
     window.print();
   }, []);
 
+  // Fetch dynamic AI analysis from Groq
+  useEffect(() => {
+    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+    if (!apiKey || !data || !data.tools) {
+      setAiSummary(data?.summary || '');
+      return;
+    }
+
+    const fetchAiSummary = async () => {
+      setAiLoading(true);
+      try {
+        const toolsListStr = data.tools.map(t => 
+          `- ${t.name} (${t.currentPlan} plan, $${t.currentSpend}/mo, potential saving: $${t.potentialSaving}/mo, Status: ${t.status}, Recommendation: ${t.recommendation})`
+        ).join('\n');
+
+        const userContent = `Team Size: ${data.teamSize || 'N/A'}
+Primary Use Case: ${data.useCase || 'N/A'}
+Tools in stack:
+${toolsListStr}
+Total Monthly Savings: $${data.totalMonthlySavings}/mo
+Total Annual Savings: $${data.totalAnnualSavings}/yr`;
+
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are BurnCheck, a professional AI spend optimization assistant. Write a highly actionable, concise 2-3 sentence summary of the audit findings. Focus on the biggest savings opportunity and tell the user exactly how to restructure their subscription plans. Do not use any introductory phrases or greetings, just output the analysis itself. Keep it under 80 words.'
+              },
+              {
+                role: 'user',
+                content: userContent
+              }
+            ],
+            temperature: 0.5,
+            max_tokens: 150
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Groq API error: ${response.status}`);
+        }
+
+        const resData = await response.json();
+        const content = resData?.choices?.[0]?.message?.content;
+        if (content) {
+          setAiSummary(content.trim().replace(/^"/, '').replace(/"$/, ''));
+        } else {
+          setAiSummary(data.summary);
+        }
+      } catch (err) {
+        console.error('Failed to fetch Groq AI summary:', err);
+        setAiSummary(data.summary);
+      } finally {
+        setAiLoading(false);
+      }
+    };
+
+    fetchAiSummary();
+  }, [data]);
+
   useEffect(() => {
     if (!data) return;
 
@@ -241,7 +310,8 @@ export default function AuditResults({ auditData, onBack }) {
     setMetaTag('og:title', titleText);
     
     // First two sentences of the AI summary description
-    const sentences = data.summary.split('.').slice(0, 2).join('.') + '.';
+    const currentSummary = aiSummary || data.summary;
+    const sentences = currentSummary.split('.').slice(0, 2).join('.') + '.';
     setMetaTag('og:description', sentences);
     setMetaTag('og:image', `${window.location.origin}/BurnCheck.png`);
     
@@ -253,16 +323,128 @@ export default function AuditResults({ auditData, onBack }) {
     return () => {
       document.title = "BurnCheck | Free AI Spend Auditor for Startups";
     };
-  }, [data]);
+  }, [data, aiSummary]);
 
   const submitLeadCapture = useCallback(async (leadData) => {
+    const resendKey = import.meta.env.VITE_RESEND_API_KEY;
+    const postmarkToken = import.meta.env.VITE_POSTMARK_SERVER_TOKEN;
+
+    const emailHtml = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 24px; background-color: #101010; color: #f2f2f2; border: 1px solid #3d3a39; border-radius: 8px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h2 style="color: #00d992; font-size: 24px; font-weight: 900; margin: 0; letter-spacing: -0.03em;">BurnCheck</h2>
+          <p style="color: #8b949e; font-size: 12px; text-transform: uppercase; tracking-wider; margin: 4px 0 0 0;">AI Spend Audit Report</p>
+        </div>
+
+        <p style="font-size: 15px; line-height: 1.6; color: #bdbdbd;">Hello ${leadData.role ? `${leadData.role} at ` : ''}${leadData.company || 'there'},</p>
+        <p style="font-size: 15px; line-height: 1.6; color: #bdbdbd;">Here is your completed AI Spend Audit report. We analyzed your active license quantities and plan tiers to outline immediate optimization vectors.</p>
+        
+        <div style="background: #1a1a1a; border: 1px solid #3d3a39; border-radius: 6px; padding: 20px; margin: 24px 0; text-align: center;">
+          <p style="margin: 0; text-transform: uppercase; font-size: 10px; letter-spacing: 0.15em; color: #8b949e; font-weight: 600;">Monthly Savings Opportunity</p>
+          <p style="margin: 6px 0 0 0; font-size: 36px; font-weight: 900; color: #00d992; font-family: monospace;">$${data.totalMonthlySavings.toLocaleString()}/mo</p>
+          
+          <div style="height: 1px; background: #3d3a39; margin: 16px 0;"></div>
+          
+          <p style="margin: 0; text-transform: uppercase; font-size: 10px; letter-spacing: 0.15em; color: #8b949e; font-weight: 600;">Annual Savings Acceleration</p>
+          <p style="margin: 6px 0 0 0; font-size: 24px; font-weight: 700; color: #ffffff; font-family: monospace;">$${data.totalAnnualSavings.toLocaleString()}/yr</p>
+        </div>
+
+        <h3 style="color: #ffffff; font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; margin: 24px 0 12px 0; border-bottom: 1px dashed #3d3a39; padding-bottom: 6px;">AI Optimization Summary</h3>
+        <p style="font-size: 14px; line-height: 1.6; font-style: italic; color: #bdbdbd; border-left: 3px solid #00d992; padding-left: 14px; margin: 12px 0;">
+          "${aiSummary || data.summary}"
+        </p>
+
+        <h3 style="color: #ffffff; font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; margin: 28px 0 12px 0; border-bottom: 1px dashed #3d3a39; padding-bottom: 6px;">Stack Breakdown & Actions</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
+          <tbody>
+            ${data.tools.map(t => `
+              <tr style="border-bottom: 1px solid #1a1a1a;">
+                <td style="padding: 12px 0; vertical-align: top;">
+                  <strong style="color: #ffffff; font-size: 14px;">${t.name}</strong>
+                  <div style="font-size: 11px; color: #8b949e; margin-top: 2px;">${t.currentPlan} plan &bull; $${t.currentSpend}/mo</div>
+                  <p style="font-size: 13px; color: #bdbdbd; margin: 6px 0 0 0; line-height: 1.5;">${t.recommendation}</p>
+                </td>
+                <td style="padding: 12px 0; text-align: right; vertical-align: top; width: 110px;">
+                  ${t.potentialSaving > 0 ? `
+                    <span style="background: rgba(0, 217, 146, 0.1); border: 1px solid rgba(0, 217, 146, 0.2); color: #00d992; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; font-family: monospace; display: inline-block;">
+                      Save $${t.potentialSaving}/mo
+                    </span>
+                  ` : `
+                    <span style="background: #1a1a1a; border: 1px solid #3d3a39; color: #8b949e; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-family: monospace; display: inline-block;">
+                      Optimal
+                    </span>
+                  `}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div style="margin-top: 36px; padding-top: 20px; border-top: 1px solid #3d3a39; text-align: center; font-size: 11px; color: #8b949e; line-height: 1.5;">
+          This audit is powered by <strong>BurnCheck</strong>.<br />
+          Maximize builder velocity. Minimize licensing bloat.
+        </div>
+      </div>
+    `;
+
+    if (resendKey) {
+      console.log("Resend API Key found. Attempting to send confirmation email...");
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${resendKey}`
+        },
+        body: JSON.stringify({
+          from: 'BurnCheck <onboarding@resend.dev>',
+          to: [leadData.email],
+          subject: `Your BurnCheck Audit: Save $${data.totalMonthlySavings}/mo`,
+          html: emailHtml
+        })
+      });
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        const errMsg = errJson?.message || `HTTP ${response.status}`;
+        throw new Error(`Resend API error: ${errMsg}`);
+      }
+      return await response.json();
+    }
+
+    if (postmarkToken) {
+      console.log("Postmark Server Token found. Attempting to send confirmation email...");
+      const response = await fetch('https://api.postmarkapp.com/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Postmark-Server-Token': postmarkToken
+        },
+        body: JSON.stringify({
+          From: 'onboarding@resend.dev', // Default sender or verified sender
+          To: leadData.email,
+          Subject: `Your BurnCheck Audit: Save $${data.totalMonthlySavings}/mo`,
+          HtmlBody: emailHtml,
+          MessageStream: 'outbound'
+        })
+      });
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        const errMsg = errJson?.Message || `HTTP ${response.status}`;
+        throw new Error(`Postmark API error: ${errMsg}`);
+      }
+      return await response.json();
+    }
+
+    // Default Fallback Mock resolve
+    console.log("No email service credentials configured. Mocking success for lead capture:", leadData);
     return new Promise((resolve) => {
       setTimeout(() => {
-        console.log("Mock lead captured:", leadData);
-        resolve({ success: true });
+        resolve({ success: true, mocked: true });
       }, 1000);
     });
-  }, []);
+  }, [data, aiSummary]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -450,9 +632,17 @@ export default function AuditResults({ auditData, onBack }) {
             BurnCheck AI Generated Summary
           </span>
         </div>
-        <p className="text-sm leading-relaxed italic" style={{ color: 'var(--color-secondary)' }}>
-          "{data.summary}"
-        </p>
+        {aiLoading ? (
+          <div className="flex flex-col gap-2 py-1">
+            <div className="h-4 bg-white/5 rounded w-full animate-pulse" />
+            <div className="h-4 bg-white/5 rounded w-5/6 animate-pulse" />
+            <div className="h-4 bg-white/5 rounded w-2/3 animate-pulse" />
+          </div>
+        ) : (
+          <p className="text-sm leading-relaxed italic animate-fade-in" style={{ color: 'var(--color-secondary)' }}>
+            "{aiSummary || data.summary}"
+          </p>
+        )}
       </div>
 
       {/* Action Row */}
