@@ -1,6 +1,8 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { ArrowLeft, Share2, Mail, Sparkles, TrendingDown, ExternalLink, X, Check, ArrowRight } from 'lucide-react';
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 // Ripple animation component for tactile hover feedback
 function CardRipple({ x, y, onDone }) {
@@ -326,6 +328,21 @@ Total Annual Savings: $${data.totalAnnualSavings}/yr`;
   }, [data, aiSummary]);
 
   const submitLeadCapture = useCallback(async (leadData) => {
+    // Store in Firebase Firestore
+    try {
+      console.log("Saving lead to Firebase Firestore...");
+      await addDoc(collection(db, "leads"), {
+        email: leadData.email,
+        company: leadData.company || '',
+        role: leadData.role || '',
+        savedAt: new Date()
+      });
+      console.log("Lead successfully stored in Firestore!");
+    } catch (firestoreErr) {
+      console.error("Failed to store lead in Firestore:", firestoreErr);
+      throw new Error(`Firestore Database write failed: ${firestoreErr.message}`);
+    }
+
     const resendKey = import.meta.env.VITE_RESEND_API_KEY;
     const postmarkToken = import.meta.env.VITE_POSTMARK_SERVER_TOKEN;
 
