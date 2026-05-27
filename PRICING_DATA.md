@@ -42,11 +42,15 @@ This document acts as the source of truth for the subscription plan pricing and 
 ## 2. API Token Cost Baselines
 These references populate the spend tables and are audited under direct developer integrations.
 
-| Model Engine | Input Cost (per 1M tokens) | Output Cost (per 1M tokens) | Primary Leak Risk |
-| :--- | :---: | :---: | :--- |
-| **GPT-4o (OpenAI)** | `$2.50` | `$10.00` | Large chat histories, verbose system instructions |
-| **Claude 3.5 Sonnet (Anthropic)** | `$3.00` | `$15.00` | Complex multi-turn developer agent loops |
-| **Gemini 1.5 Pro (Google)** | `$1.25` / `$2.50` | `$5.00` / `$10.00` | Massive 2M token context window lookups |
+*   **OpenAI API Pricing**: [OpenAI API Pricing](https://openai.com/api/pricing/)
+*   **Anthropic API Pricing**: [Anthropic API Pricing](https://www.anthropic.com/pricing)
+*   **Google Gemini API Pricing**: [Google AI Studio Pricing](https://ai.google.dev/pricing)
+
+| Model Engine | Input Cost (per 1M tokens) | Output Cost (per 1M tokens) | Primary Leak Risk | Source URL |
+| :--- | :---: | :---: | :--- | :--- |
+| **GPT-4o (OpenAI)** | `$2.50` | `$10.00` | Large chat histories, verbose system instructions | [OpenAI Pricing](https://openai.com/api/pricing/) |
+| **Claude 3.5 Sonnet (Anthropic)** | `$3.00` | `$15.00` | Complex multi-turn developer agent loops | [Anthropic Pricing](https://www.anthropic.com/pricing) |
+| **Gemini 1.5 Pro (Google)** | `$1.25` / `$2.50` | `$5.00` / `$10.00` | Massive 2M token context window lookups | [Google AI Studio Pricing](https://ai.google.dev/pricing) |
 
 ---
 
