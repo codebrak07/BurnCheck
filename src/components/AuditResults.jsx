@@ -147,6 +147,7 @@ export default function AuditResults({ auditData, onBack }) {
   const [copied, setCopied] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [company, setCompany] = useState('');
   const [role, setRole] = useState('');
   const [honeypot, setHoneypot] = useState('');
@@ -332,6 +333,7 @@ Total Annual Savings: $${data.totalAnnualSavings}/yr`;
     try {
       console.log("Saving lead to Firebase Firestore...");
       await addDoc(collection(db, "leads"), {
+        name: leadData.name || '',
         email: leadData.email,
         company: leadData.company || '',
         role: leadData.role || '',
@@ -487,6 +489,7 @@ Total Annual Savings: $${data.totalAnnualSavings}/yr`;
         setShowModal(false);
         setSuccess(false);
         setEmail('');
+        setName('');
         setCompany('');
         setRole('');
         setHoneypot('');
@@ -496,7 +499,7 @@ Total Annual Savings: $${data.totalAnnualSavings}/yr`;
 
     try {
       setLoading(true);
-      await submitLeadCapture({ email, company, role });
+      await submitLeadCapture({ name, email, company, role });
       setLoading(false);
       setSuccess(true);
       
@@ -508,6 +511,7 @@ Total Annual Savings: $${data.totalAnnualSavings}/yr`;
         setShowModal(false);
         setSuccess(false);
         setEmail('');
+        setName('');
         setCompany('');
         setRole('');
       }, 2000);
@@ -769,6 +773,21 @@ Total Annual Savings: $${data.totalAnnualSavings}/yr`;
                       onChange={e => setHoneypot(e.target.value)}
                       tabIndex="-1"
                       autoComplete="off"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-semibold mb-2 uppercase tracking-widest" style={{ color: 'var(--color-subtle)' }}>
+                      Full Name (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Jane Doe"
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                      className="input-field"
+                      disabled={loading}
+                      data-cursor-hover
                     />
                   </div>
 
