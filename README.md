@@ -6,7 +6,7 @@ In under 2 minutes, BurnCheck highlights waste leaks across subscription models 
 
 ---
 
-## 🚀 Key Product Features
+## Key Product Features
 
 *   **Tactile Parallax Interactions**: Modern components featuring X- and Y-axis 3D perspective rotation, click spring snapping, and radial spotlight cursor tracing.
 *   **Inferno Cursor Trail**: Canvas physics rendering upward-accelerating particle trails (`$`, `🔥`, `💸`) following cursor movement.
@@ -17,7 +17,7 @@ In under 2 minutes, BurnCheck highlights waste leaks across subscription models 
 
 ---
 
-## 🛠️ Tech Stack & Architecture
+## Tech Stack & Architecture
 
 *   **Core Scaffold**: React 18, Vite 8, Vanilla CSS.
 *   **Routing**: `react-router-dom` client-side routes.
@@ -26,7 +26,7 @@ In under 2 minutes, BurnCheck highlights waste leaks across subscription models 
 
 ---
 
-## ⚙️ Environment Variables Setup
+## Environment Variables Setup
 
 Create a `.env` file in the repository root to configure external integrations:
 
@@ -42,7 +42,7 @@ VITE_POSTMARK_SERVER_TOKEN=your_postmark_server_token_here
 
 ---
 
-## 📘 Repository Document Reference Index
+## Repository Document Reference Index
 
 For in-depth explanations of specific business or technical layers, see the root reference documents:
 
@@ -60,7 +60,7 @@ For in-depth explanations of specific business or technical layers, see the root
 
 ---
 
-## 💻 Local Development Setup
+## Local Development Setup
 
 1. Install dependencies:
    ```bash
