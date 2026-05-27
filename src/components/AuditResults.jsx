@@ -328,7 +328,7 @@ Total Annual Savings: $${data.totalAnnualSavings}/yr`;
   }, [data, aiSummary]);
 
   const submitLeadCapture = useCallback(async (leadData) => {
-    // Store in Firebase Firestore
+    // Store in Firebase Firestore (non-fatal — failure does not block email/mock flow)
     try {
       console.log("Saving lead to Firebase Firestore...");
       await addDoc(collection(db, "leads"), {
@@ -339,8 +339,9 @@ Total Annual Savings: $${data.totalAnnualSavings}/yr`;
       });
       console.log("Lead successfully stored in Firestore!");
     } catch (firestoreErr) {
-      console.error("Failed to store lead in Firestore:", firestoreErr);
-      throw new Error(`Firestore Database write failed: ${firestoreErr.message}`);
+      // Log but do NOT rethrow — Firestore security rules may block unauthenticated
+      // writes in production. The confirmation email / mock flow should still succeed.
+      console.warn("Firestore write skipped (non-fatal):", firestoreErr?.code || firestoreErr?.message);
     }
 
     const resendKey = import.meta.env.VITE_RESEND_API_KEY;
