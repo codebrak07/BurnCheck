@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { ArrowLeft, Share2, Mail, Sparkles, TrendingDown, ExternalLink, X, Check, ArrowRight } from 'lucide-react';
 import { collection, addDoc } from "firebase/firestore";
@@ -158,7 +158,37 @@ export default function AuditResults({ auditData, onBack }) {
   const [aiLoading, setAiLoading] = useState(false);
 
   // Fallback to sample data if no auditData is passed
-  const data = auditData || {
+  const data = useMemo(() => auditData || {
+    totalMonthlySavings: 340,
+    totalAnnualSavings: 4080,
+    tools: [
+      {
+        name: "Cursor",
+        currentPlan: "Business",
+        currentSpend: 80,
+        recommendation: "Downgrade to Pro — Business plan collaboration features unused for teams under 5.",
+        potentialSaving: 40,
+        status: "overspending"
+      },
+      {
+        name: "Claude",
+        currentPlan: "Team",
+        currentSpend: 150,
+        recommendation: "Downgrade to Pro — Claude Team has a 5-seat minimum which is currently underutilized.",
+        potentialSaving: 50,
+        status: "consider switch"
+      },
+      {
+        name: "ChatGPT",
+        currentPlan: "Enterprise",
+        currentSpend: 250,
+        recommendation: "Optimal structure. Check seats monthly for inactive developers to keep clean.",
+        potentialSaving: 0,
+        status: "optimal"
+      }
+    ],
+    summary: "Your stack is spending $340/month more than necessary. The biggest leak is Cursor Business for a small team, combined with underutilized Claude Team seats. Switching these to developer Pro plans maintains performance while recapturing immediately."
+  }, [auditData]);
     totalMonthlySavings: 340,
     totalAnnualSavings: 4080,
     tools: [
