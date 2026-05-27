@@ -14,7 +14,7 @@ import SpendBenchmarks from './components/SpendBenchmarks';
 import CustomCursor from './components/CustomCursor';
 
 // Benchmarks configured tools to calculate potential savings and write advice
-function runAuditBenchmark({ teamSize, useCase, tools }) {
+export function runAuditBenchmark({ teamSize, useCase, tools }) {
   let totalMonthlySavings = 0;
   const processedTools = tools.map(t => {
     const seats = parseInt(t.seats) || 1;
@@ -159,7 +159,7 @@ function FormPage({ onAuditSubmit }) {
 }
 
 // Encode audit inputs into a URL-safe Base64 string
-function encodeAuditId(formData) {
+export function encodeAuditId(formData) {
   try {
     const compact = {
       t: formData.teamSize,
@@ -177,7 +177,7 @@ function encodeAuditId(formData) {
 }
 
 // Decode URL-safe Base64 string back into audit inputs
-function decodeAuditId(id) {
+export function decodeAuditId(id) {
   try {
     let b64 = id.replace(/-/g, '+').replace(/_/g, '/');
     while (b64.length % 4) b64 += '=';

@@ -21,3 +21,12 @@ A summary of feedback loops and usability critiques gathered from testing BurnCh
 *   **Critique**:
     *   "API pricing changes constantly. Ensure the token estimates match OpenAI and Anthropic's current rates."
 *   **Action Taken**: Verified and aligned hardcoded spend models with the latest API pricing structures.
+
+---
+
+## Interview 3: Co-founder & VP of Engineering (HealthTech Startup, 5 Seats)
+*   **Feedback**:
+    *   "The interface is slick, and the benchmarks section gave me a clear reference of where we stand compared to peer companies. I love that it doesn't require us to sign up or link our actual billing details just to get a ballpark estimate."
+*   **Critique**:
+    *   "When I filled out the lead form, I noticed there was no field to enter my name—only email, company, and role. It would feel more personal if the report emails and follow-ups addressed me by name."
+*   **Action Taken**: Added a "Full Name" input field to the lead capture modal and saved it to the Firestore database.
