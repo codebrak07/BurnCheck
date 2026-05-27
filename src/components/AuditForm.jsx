@@ -123,31 +123,31 @@ export default function AuditForm({ onBack, onSubmit }) {
               <div key={idx} className="flex flex-col md:flex-row md:items-end gap-3 p-5 rounded-lg"
                 style={{ background: 'var(--color-background)', border: '1px solid var(--color-border)' }}>
                 <div className="flex-1">
-                  <label className="block text-[10px] font-semibold mb-2 uppercase tracking-widest" style={{ color: 'var(--color-subtle)' }}>Tool</label>
-                  <select value={item.toolName} onChange={e => handleToolChange(idx, 'toolName', e.target.value)}
+                  <label htmlFor={`tool-${idx}`} className="block text-[10px] font-semibold mb-2 uppercase tracking-widest" style={{ color: 'var(--color-subtle)' }}>Tool</label>
+                  <select id={`tool-${idx}`} aria-label="Tool Name" value={item.toolName} onChange={e => handleToolChange(idx, 'toolName', e.target.value)}
                     data-cursor-hover className="input-field appearance-none">
                     {Object.keys(toolPlans).map(n => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </div>
                 <div className="flex-1">
-                  <label className="block text-[10px] font-semibold mb-2 uppercase tracking-widest" style={{ color: 'var(--color-subtle)' }}>Plan</label>
-                  <select value={item.plan} onChange={e => handleToolChange(idx, 'plan', e.target.value)}
+                  <label htmlFor={`plan-${idx}`} className="block text-[10px] font-semibold mb-2 uppercase tracking-widest" style={{ color: 'var(--color-subtle)' }}>Plan</label>
+                  <select id={`plan-${idx}`} aria-label="Plan Tier" value={item.plan} onChange={e => handleToolChange(idx, 'plan', e.target.value)}
                     data-cursor-hover className="input-field appearance-none">
                     {toolPlans[item.toolName].map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
                 <div className="flex-1">
-                  <label className="block text-[10px] font-semibold mb-2 uppercase tracking-widest" style={{ color: 'var(--color-subtle)' }}>Monthly Spend (USD)</label>
+                  <label htmlFor={`spend-${idx}`} className="block text-[10px] font-semibold mb-2 uppercase tracking-widest" style={{ color: 'var(--color-subtle)' }}>Monthly Spend (USD)</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: 'var(--color-subtle)' }}>$</span>
-                    <input type="number" min="0" step="0.01" value={item.spend}
+                    <input id={`spend-${idx}`} aria-label="Monthly Spend in USD" type="number" min="0" step="0.01" value={item.spend}
                       onChange={e => handleToolChange(idx, 'spend', Math.max(0, parseFloat(e.target.value) || 0))}
                       data-cursor-hover className="input-field" style={{ paddingLeft: '24px' }} />
                   </div>
                 </div>
                 <div className="w-24">
-                  <label className="block text-[10px] font-semibold mb-2 uppercase tracking-widest" style={{ color: 'var(--color-subtle)' }}>Seats</label>
-                  <input type="number" min="1" value={item.seats}
+                  <label htmlFor={`seats-${idx}`} className="block text-[10px] font-semibold mb-2 uppercase tracking-widest" style={{ color: 'var(--color-subtle)' }}>Seats</label>
+                  <input id={`seats-${idx}`} aria-label="Number of Seats" type="number" min="1" value={item.seats}
                     onChange={e => handleToolChange(idx, 'seats', Math.max(1, parseInt(e.target.value) || 1))}
                     data-cursor-hover className="input-field" />
                 </div>
