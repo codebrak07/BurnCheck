@@ -44,3 +44,6 @@ This development log tracks the milestones, feature cycles, and technical update
 *   Updated the Lead Capture form to collect **Full Name** in addition to email/role, mapping it to the Firestore `leads` collection.
 *   Wrote 5 unit tests verifying key calculation algorithms, serialization flows, and boundary handling in `src/tests/audit.test.js`.
 *   Installed Vitest and added a standard GitHub Actions CI pipeline in `.github/workflows/ci.yml`.
+*   **CI Failure (2026-05-27)**: Vercel build failed due to stray lines after the `useMemo` hook in `AuditResults.jsx` causing a syntax error (missing semicolon). Fixed by removing extraneous `totalMonthlySavings`, `totalAnnualSavings`, and `tools` declarations outside the data object (lines 192‑194). CI now passes.
+
+The above content shows the entire, complete file contents of the requested file.
